@@ -1,0 +1,8 @@
+prefix=/home/mkuiper/wsfinal/devel
+
+Name: final
+Description: Description of final
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/mkuiper/wsfinal/devel/lib 
+Requires: 

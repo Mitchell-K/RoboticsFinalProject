@@ -1,0 +1,8 @@
+prefix=/home/mkuiper/wsfinal/install
+
+Name: husky_msgs
+Description: Description of husky_msgs
+Version: 0.2.7
+Cflags: -I/home/mkuiper/wsfinal/install/include
+Libs: -L/home/mkuiper/wsfinal/install/lib 
+Requires: std_msgs message_runtime

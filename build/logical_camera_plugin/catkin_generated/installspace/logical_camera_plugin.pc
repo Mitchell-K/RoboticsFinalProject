@@ -1,0 +1,8 @@
+prefix=/home/mkuiper/wsfinal/install
+
+Name: logical_camera_plugin
+Description: Description of logical_camera_plugin
+Version: 0.0.0
+Cflags: -I/home/mkuiper/wsfinal/install/include
+Libs: -L/home/mkuiper/wsfinal/install/lib 
+Requires: gazebo_plugins gazebo_ros roscpp message_runtime
