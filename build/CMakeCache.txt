@@ -808,6 +808,12 @@ ignition-math2_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/ignition-math2
 //The directory containing a CMake configuration file for image_transport.
 image_transport_DIR:PATH=/opt/ros/kinetic/share/image_transport/cmake
 
+//Value Computed by CMake
+labpkg_BINARY_DIR:STATIC=/home/mkuiper/wsfinal/build/labpkg
+
+//Value Computed by CMake
+labpkg_SOURCE_DIR:STATIC=/home/mkuiper/wsfinal/src/labpkg
+
 //Path to a library.
 lib:FILEPATH=/opt/ros/kinetic/lib/libgazebo_ros_paths_plugin.so
 

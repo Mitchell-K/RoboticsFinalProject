@@ -38,6 +38,8 @@ final/CMakeFiles/move.dir/src/move.cpp.o: /opt/ros/kinetic/include/move_base_msg
 final/CMakeFiles/move.dir/src/move.cpp.o: /opt/ros/kinetic/include/move_base_msgs/MoveBaseFeedback.h
 final/CMakeFiles/move.dir/src/move.cpp.o: /opt/ros/kinetic/include/move_base_msgs/MoveBaseGoal.h
 final/CMakeFiles/move.dir/src/move.cpp.o: /opt/ros/kinetic/include/move_base_msgs/MoveBaseResult.h
+final/CMakeFiles/move.dir/src/move.cpp.o: /opt/ros/kinetic/include/nav_msgs/MapMetaData.h
+final/CMakeFiles/move.dir/src/move.cpp.o: /opt/ros/kinetic/include/nav_msgs/OccupancyGrid.h
 final/CMakeFiles/move.dir/src/move.cpp.o: /opt/ros/kinetic/include/ros/advertise_options.h
 final/CMakeFiles/move.dir/src/move.cpp.o: /opt/ros/kinetic/include/ros/advertise_service_options.h
 final/CMakeFiles/move.dir/src/move.cpp.o: /opt/ros/kinetic/include/ros/assert.h

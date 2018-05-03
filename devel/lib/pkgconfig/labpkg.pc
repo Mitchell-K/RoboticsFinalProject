@@ -1,0 +1,8 @@
+prefix=/home/mkuiper/wsfinal/devel
+
+Name: labpkg
+Description: Description of labpkg
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/mkuiper/wsfinal/devel/lib 
+Requires: 

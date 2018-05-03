@@ -4,12 +4,33 @@
 #include <geometry_msgs/Pose2D.h>
 #include <angles/angles.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <nav_msgs/OccupancyGrid.h>
+
 
 //Globals
 bool newGoal;
 bool sentGoal;
-
+bool waitingForMap;
+nav_msgs::OccupancyGrid map;
 float curX = 0, curY = 0;
+
+bool isFree(float xx, float yy){
+    int xGrid = map.info.width/2 + xx/map.info.resolution;
+    int yGrid = map.info.height/2 + yy/map.info.resolution;
+    int i = xGrid + map.info.width*yGrid;
+    ROS_INFO_STREAM("Checking (" << xx << ", " << yy << ") on costmap");
+    if ( (int)map.data[i] >= 90 | (int)map.data[i] == -1 ) {
+	ROS_INFO_STREAM("Bad coordinate");
+	return false;
+    }
+    return true;
+}
+
+void mapLoad(const nav_msgs::OccupancyGrid::ConstPtr& msg) {
+    map = *msg;
+    waitingForMap = false;	
+    //ROS_INFO_STREAM("Map Loaded" << map.info);
+}
 
 // Called when new goal is activated
 void serviceActivated() {
@@ -38,6 +59,8 @@ int main(int argc,char **argv) {
     ros::init(argc,argv,"move");
     ros::NodeHandle nh;
 
+    ros::Subscriber mapSub = nh.subscribe("map", 1000, mapLoad);
+    waitingForMap = true;
     actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> ac("move_base",true);
     ROS_INFO_STREAM("Waiting for server to be available...");
 
@@ -52,9 +75,12 @@ int main(int argc,char **argv) {
 
     ros::Time startGoal;
 
-    float goalX, goalY, goalTheta;
+    float goalX, goalY;
 
     while (ros::ok() ) {
+        if (waitingForMap){
+	    ROS_INFO_STREAM("Waiting for map");
+	}
         if (firstStart & !sentGoal){
 	    // Create goal for robot
     	    move_base_msgs::MoveBaseGoal goal;
@@ -64,34 +90,27 @@ int main(int argc,char **argv) {
 	    //Set goal coordinates
 	    switch(count) {
 		case 0: 
-    	    		goal.target_pose.pose.position.x = 7;
-    	    		goal.target_pose.pose.position.y = 7;
+    	    		goal.target_pose.pose.position.x = 8;
+    	    		goal.target_pose.pose.position.y = 8;
 			break;
 		case 1: 
-    	    		goal.target_pose.pose.position.x = -7;
-    	    		goal.target_pose.pose.position.y = 7;
+    	    		goal.target_pose.pose.position.x = 8;
+    	    		goal.target_pose.pose.position.y = -8;
 			break;
 		case 2: 
-    	    		goal.target_pose.pose.position.x = -7;
-    	    		goal.target_pose.pose.position.y = -7;
+    	    		goal.target_pose.pose.position.x = -8;
+    	    		goal.target_pose.pose.position.y = -8;
 			break;
 		case 3: 
-    	    		goal.target_pose.pose.position.x = 7;
-    	    		goal.target_pose.pose.position.y = -7;
-			break;
-		default:
+    	    		goal.target_pose.pose.position.x = -8;
+    	    		goal.target_pose.pose.position.y = 8;
 			//End of start
 			firstStart = false;
-			break;		    		
+			break;
+		default:
+			break;	    		
 	    }	    
- 	    // Make quaternion for goal
-	    tf2::Quaternion q;
-	    q.setRPY(0, 0, 45); // Sets angle of robot to 45 degrees relative to map, dont edit first two numbers
-	    // Set the goal Orientation
-    	    goal.target_pose.pose.orientation.x = q.x();
-	    goal.target_pose.pose.orientation.y = q.y();
-	    goal.target_pose.pose.orientation.z = q.z();
-	    goal.target_pose.pose.orientation.w = q.w();
+	    goal.target_pose.pose.orientation.w = 1;
 
 
 	    //Send goal to robot
@@ -102,15 +121,16 @@ int main(int argc,char **argv) {
 	}
         // If we need a new pose wait
 	// *****This will need more loagic **************
-	else if (newGoal) {
+	else if (newGoal & !firstStart) {
 	    //int randNum = rand()%(max-min + 1) + min;
 	    float tempX = rand()%(17) - 8;
 	    float tempY = rand()%(17) - 8;
-	    float tempTheta = 45;
-	    if ( sqrt( pow(tempX-curX,2) - pow(tempY-curY,2) ) > 3.0){
+	    ROS_INFO_STREAM("Attempting goal: (" << tempX << ", " << tempY << ")"  );
+	    bool coordSafe = isFree(tempX, tempY);
+            bool tooClose = sqrt( pow(tempX-curX,2) - pow(tempY-curY,2) ) < 3.0;
+	    if ( coordSafe && !tooClose ){
 		goalX = tempX;
 		goalY = tempY;
-		goalTheta = tempTheta;
 		newGoal = false;
 	    }
 	}
@@ -125,19 +145,11 @@ int main(int argc,char **argv) {
 	    //Set goal coordinates
     	    goal.target_pose.pose.position.x = goalX;
     	    goal.target_pose.pose.position.y = goalY;
-
-	    // Make quaternion for goal
-	    tf2::Quaternion q;
-	    q.setRPY(0, 0, goalTheta); // Sets angle of robot to 45 degrees relative to map, dont edit first two numbers
-	    // Set the goal Orientation
-    	    goal.target_pose.pose.orientation.x = q.x();
-	    goal.target_pose.pose.orientation.y = q.y();
-	    goal.target_pose.pose.orientation.z = q.z();
-	    goal.target_pose.pose.orientation.w = q.w();
+	    goal.target_pose.pose.orientation.w = 1;
 
 
 	    //Send goal to robot
-	    ROS_INFO_STREAM("Sending goal: (" << goalX << ", " << goalY << ", " << goalTheta << ")"  );
+	    ROS_INFO_STREAM("Sending goal: (" << goalX << ", " << goalY << ")"  );
     	    ac.sendGoal(goal,&serviceDone,&serviceActivated,&serviceFeedback);
 	    startGoal = ros::Time::now();
 	    sentGoal = true;
