@@ -28,21 +28,22 @@ bool isFree(Cord tempCord){
     int yGrid = map.info.height/2 + tempCord.y/map.info.resolution;
     int i = xGrid + map.info.width*yGrid;
     //ROS_INFO_STREAM("Checking (" << tempCord.x << ", " << tempCord.y << ") on costmap" << i << '\t'<< (int)map.data[i]  );
-    if ( (int)map.data[i] >= 90 | (int)map.data[i] == -1 ) {
-	ROS_INFO_STREAM("Bad coordinate");
+    if ( (int)map.data[i] >= 75 | (int)map.data[i] == -1 ) {
+	ROS_INFO_STREAM("Bad coordinate (failed costmap check)");
 	return false;
     }
     return true;
 }
 // Checks if we've been near this coordinate before
 bool beenNearCord(const Cord tempCord){
-    if (sqrt( pow(0-tempCord.x,2) - pow(0-tempCord.y,2) ) < 3.0){
+    if (std::sqrt( pow(0-tempCord.x,2) - pow(0-tempCord.y,2) ) < 2.0){
 	    ROS_INFO_STREAM("Too close to center");
 	    return true;
         }
     std::vector<Cord>::iterator it;
     for(it = prevCords.begin(); it != prevCords.end(); it++)    {
-	if (sqrt( float(pow(it->x-tempCord.x,2)) - float(pow(it->y-tempCord.y,2)) ) < 2.0){
+	float dist = std::sqrt( float(pow(it->x-tempCord.x,2)) - float(pow(it->y-tempCord.y,2)) );
+	if (dist < 1.0){
 	    ROS_INFO_STREAM("Been near, trying new cordinate.");
 	    return true;
         }
@@ -107,7 +108,7 @@ int main(int argc,char **argv) {
 
     Cord goalCord;
     while (ros::ok() ) {        
-        if (firstStart & !sentGoal){
+        if (firstStart & !sentGoal & newGoal){
 	    // Create goal for robot
     	    move_base_msgs::MoveBaseGoal goal;
 	    // Set header information for goal message
@@ -126,10 +127,12 @@ int main(int argc,char **argv) {
 		case 2: 
 			goalCord.x = -8.0;
 			goalCord.y = -8;
+			goal.target_pose.pose.orientation.z = .25;
 			break;
 		case 3: 
 			goalCord.x = -8.0;
 			goalCord.y = 8.0;
+			goal.target_pose.pose.orientation.z = 0;
 			//End of start
 			firstStart = false;
 			break;
@@ -137,8 +140,8 @@ int main(int argc,char **argv) {
 			break;	    		
 	    }
 	    goal.target_pose.pose.position.x = goalCord.x;
-    	    goal.target_pose.pose.position.y = goalCord.y;	    
-	    goal.target_pose.pose.orientation.w = 1;
+    	    goal.target_pose.pose.position.y = goalCord.y;
+	    goal.target_pose.pose.orientation.z = 1.0;
 
 	    //Send goal to robot
 	    ROS_INFO_STREAM("Sending goal: Case: " << count++ );
@@ -151,11 +154,11 @@ int main(int argc,char **argv) {
 	else if (newGoal & !firstStart) {
 	    //int randNum = rand()%(max-min + 1) + min;
 	    Cord tempCord;
-	    tempCord.x = float(rand())/float(RAND_MAX) * 17 - 8;
-	    tempCord.y = float(rand())/float(RAND_MAX) * 17 - 8;
-	    ROS_INFO_STREAM("Attempting goal: (" << tempCord.x << ", " << tempCord.y << ")"  );
+	    tempCord.x = float(rand())/float(RAND_MAX) * 17 - 8.5;
+	    tempCord.y = float(rand())/float(RAND_MAX) * 17 - 8.5;
+	    ROS_INFO_STREAM("Check goal:(" << tempCord.x << ", " << tempCord.y << ")"  );
 	    bool coordSafe = isFree(tempCord);
-            bool tooClose = sqrt( pow(tempCord.x-curX,2) - pow(tempCord.y-curY,2) ) < 3.0;
+            bool tooClose = std::sqrt( pow(tempCord.x-curX,2) - pow(tempCord.y-curY,2) ) < 2.0;
 	    bool alreadyTried = beenNearCord(tempCord);
 	    if ( coordSafe && !tooClose && !alreadyTried){
 		goalCord.x = tempCord.x;
@@ -178,7 +181,7 @@ int main(int argc,char **argv) {
 
 
 	    //Send goal to robot
-	    ROS_INFO_STREAM("Sending goal: (" << goalCord.x << ", " << goalCord.y << ")"  );
+	    ROS_INFO_STREAM("Sent goal:(" << goalCord.x << ", " << goalCord.y << ")"  );
 	    prevCords.push_back(goalCord);
     	    ac.sendGoal(goal,&serviceDone,&serviceActivated,&serviceFeedback);
 	    startGoal = ros::Time::now();

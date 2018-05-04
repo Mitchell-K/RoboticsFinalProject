@@ -5,6 +5,7 @@
 #include <vector>
 
 
+
 // Struct for found treasures
 struct Treasure{
     std::string name;
@@ -49,7 +50,7 @@ void logicalCameraReceived(const logical_camera_plugin::logicalImage &msg) {
 	tempTreasure.w = imagePose.orientation.w;
 	treasures.push_back(tempTreasure);
 
-	ROS_INFO_STREAM("Found treasure(" << treasures.size() << "):"<< msg.modelName << " at location: " << std::endl << imagePose);
+	ROS_INFO_STREAM("Found treasure(" << treasures.size() << "):"<< msg.modelName << " at location:(" << imagePose.position.x << ", " << imagePose.position.y << ")");
     }
 }
 
